@@ -7,7 +7,7 @@ import math
 @dataclass
 class GPTConfig:
     block_size: int = 1024 ## max sequence length
-    vocab_size: int = 50527 ## number of tokens: 50,000 BPE merges + 256 bytes tokens + 1 <|endoftext|> token. "I'll cover tokenization a little bit as well!!!"
+    vocab_size: int = 50257 ## number of tokens: 50,000 BPE merges + 256 bytes tokens + 1 <|endoftext|> token. "I'll cover tokenization a little bit as well!!!"
     n_layer: int = 12 ## num of layers
     n_head: int = 12 ## num of heads
     n_embd: int = 768 ## embedding dimension
@@ -21,6 +21,7 @@ class CasualSelfAttention(nn.Module):
         self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd)
         ## output projection
         self.c_proj = nn.Linear(config.n_embd, config.n_embd)
+        self.c_proj.SHOULD_SCALE = True
         self.n_head = config.n_head
         self.n_embd = config.n_embd
         ## it is not bias actually, it is the mask, lower triangular matrix but in this code we're following HF/OpenAI naming conventions.
@@ -36,10 +37,12 @@ class CasualSelfAttention(nn.Module):
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         ## Here is the attention calculations after getting q, k, v tensors
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1))) ## query * key transpoze divided by the hs of key.
-        att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float('-inf')) ## fill the parts coming after current sequence lenght with negative infinity.
-        att = F.softmax(att, dim=-1) ## get the logits from the query and the key interactions and make them as probabilities.
-        y = att @ v ## (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        # att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1))) ## query * key transpoze divided by the hs of key.
+        # att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float('-inf')) ## fill the parts coming after current sequence lenght with negative infinity.
+        # att = F.softmax(att, dim=-1) ## get the logits from the query and the key interactions and make them as probabilities.
+        # y = att @ v ## (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+
         y = y.transpose(1, 2).contiguous().view(B, T, C) ## re-assemble all head outputs side by side and reshape them.
         ## output projection
         y = self.c_proj(y)
@@ -52,6 +55,7 @@ class MLP(nn.Module):
         self.c_fc = nn.Linear(config.n_embd, 4 * config.n_embd)
         self.gelu = nn.GELU(approximate='tanh') ## GELU is better for the gradients below zero, because it's not a flat line so there is always a reason to move. No dead neuron. Approximation is for historical reasons, because of computation limits.
         self.c_proj = nn.Linear(4* config.n_embd, config.n_embd)
+        self.c_proj.SHOULD_SCALE = True
 
     def forward(self, x):
         x = self.c_fc(x)
@@ -89,6 +93,20 @@ class GPT(nn.Module):
 
         ## weight sharing scheme
         self.transformer.wte.weight = self.lm_head.weight
+
+        ## init params
+        self.apply(self._init_weights)
+
+    def _init_weights(self, module):
+        std = 0.02
+        if hasattr(module, "SHOULD_SCALE"):
+            std *= (2 * self.config.n_layer) ** -0.5
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=std) ## 1/ sqrt(n_embed) --> Xavier initialization
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02) ## In gpt article it is 0.01
 
     def forward(self, idx, targets=None):
         ## idx is of shape (B, T)
@@ -202,13 +220,17 @@ print(f"using device: {device}")
 num_of_return_sequences = 5
 max_length = 30
 
-B, T = 4, 32
+## 10 GB of HBM GPU usage!!!! watch -n 0.5 nvidia-smi
+B, T = 8, 1024
 train_loader = DataLoaderLite(B=B, T=T)
 
+torch.set_float32_matmul_precision('high') ## Use TF32 instead of FP32
+
 ## model = GPT.from_pretrained('gpt2')
-model = GPT(GPTConfig())
+model = GPT(GPTConfig(vocab_size=50304))
 model.eval() ## This means we won't be in the training stage.
 model.to(device)
+model = torch.compile(model) ## this finds most of the operations and compiles them before the python interpreter.
 
 # tokens = enc.encode("Hello, I'm a language model,") ## tokenize the given sentence with gpt2 tokenizer algorithm
 
@@ -227,17 +249,23 @@ model.to(device)
 # x = tokens.to('cuda')
 
 ## logits, loss = model(x, y)
-
+import time
 ## optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 for i in range(50):
+    t0 = time.time()
     x, y = train_loader.next_batch()
     x, y = x.to(device), y.to(device)
     optimizer.zero_grad()
-    logits, loss = model(x, y)
+    with torch.autocast(device_type=device, dtype=torch.bfloat16): ## Now we use bfloat16 as torch recommends, this causes mixed precision but still the weights are float32. The documentation shows what gets converted
+        logits, loss = model(x, y)
     loss.backward()
     optimizer.step()
-    print(f"step {i}, loss: {loss.item()}")
+    torch.cuda.synchronize()
+    t1 = time.time()
+    dt = (t1 - t0) * 1000
+    tokens_per_second = (train_loader.B * train_loader.T) / (t1 - t0)
+    print(f"step {i}, loss: {loss.item()}, dt: {dt:.2f}ms, tok/sec: {tokens_per_second:.4f}")
 
 import sys; sys.exit(0)
 
