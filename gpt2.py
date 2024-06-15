@@ -87,7 +87,10 @@ class GPT(nn.Module):
         ))
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False) ## Final linear layer-- input dimension, output dimension
 
-    def forward(self, idx):
+        ## weight sharing scheme
+        self.transformer.wte.weight = self.lm_head.weight
+
+    def forward(self, idx, targets=None):
         ## idx is of shape (B, T)
         B, T = idx.size()
         assert T <= self.config.block_size, f"You have to use {self.config.block_size} sequence length or less"
@@ -102,7 +105,10 @@ class GPT(nn.Module):
         ## final layer norm and classifier
         x = self.transformer.ln_f(x)
         logits = self.lm_head(x) ## (B, T, vocab_size)
-        return logits
+        loss = None
+        if targets is not None:
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
+        return logits, loss
 
     @classmethod
     def from_pretrained(cls, model_type):
@@ -152,21 +158,88 @@ class GPT(nn.Module):
                     sd[k].copy_(sd_hf[k])
 
         return model
+
+import tiktoken
+
+## read files in chunks
+class DataLoaderLite:
+    def __init__(self, B, T) -> None:
+        self.B = B
+        self.T = T
+
+        with open("input.txt", "r") as f:
+            text = f.read()
+
+        enc = tiktoken.get_encoding('gpt2') ## get the gpt2 tokenizer
+        tokens = enc.encode(text)
+        self.tokens = torch.tensor(tokens)
+        print(f"loaded {len(self.tokens)} tokens!")
+        print(f"1 epoch = {len(self.tokens) // (B * T)} batches")
+
+        self.current_position = 0
+
+    def next_batch(self):
+        B, T = self.B, self.T
+        buf = self.tokens[self.current_position : self.current_position+B*T+1]
+        x = (buf[:-1].view(B, T))
+        y = (buf[1:].view(B, T))
+        ## Advance the position in the tensor
+        self.current_position += B*T
+        ## if loading the next batch would be out of bounds, reset
+        if self.current_position + (B * T + 1) > len(self.tokens):
+            self.current_position = 0
+        return x, y
+
+
+device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda"
+elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+    device = "mps"
+print(f"using device: {device}")
     
 num_of_return_sequences = 5
 max_length = 30
 
-model = GPT.from_pretrained('gpt2')
-model.eval()
-model.to('cuda')
+B, T = 4, 32
+train_loader = DataLoaderLite(B=B, T=T)
 
-import tiktoken
-enc = tiktoken.get_encoding('gpt2') ## get the gpt2 tokenizer
-tokens = enc.encode("Hello, I'm a language model,") ## tokenize the given sentence with gpt2 tokenizer algorithm
-tokens = torch.tensor(tokens, dtype=torch.long) ## (8,) change this tokens to torch tensor
-tokens = tokens.unsqueeze(0).repeat(num_of_return_sequences, 1) ## (5, 8) add another dimension and repeat the same values for num_of_return_sequences times.
+## model = GPT.from_pretrained('gpt2')
+model = GPT(GPTConfig())
+model.eval() ## This means we won't be in the training stage.
+model.to(device)
+
+# tokens = enc.encode("Hello, I'm a language model,") ## tokenize the given sentence with gpt2 tokenizer algorithm
+
+
+# text = text[:1000]
+# tokens = enc.encode(text)
+
+## tokens = torch.tensor(tokens, dtype=torch.long) ## (8,) change this tokens to torch tensor
+## tokens = tokens.unsqueeze(0).repeat(num_of_return_sequences, 1) ## (5, 8) add another dimension and repeat the same values for num_of_return_sequences times.
 ## These tokens are the idx in our GPT class forward method. The parameter.
-x = tokens.to('cuda')
+
+## Here we are creating a buffer that contains one more token elements to use as label.
+# buf = torch.tensor(tokens[:B*T + 1], device=device)
+# x = buf[:-1].view(B, T)
+# y = buf[1:].view(B, T)
+# x = tokens.to('cuda')
+
+## logits, loss = model(x, y)
+
+## optimizer
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+for i in range(50):
+    x, y = train_loader.next_batch()
+    x, y = x.to(device), y.to(device)
+    optimizer.zero_grad()
+    logits, loss = model(x, y)
+    loss.backward()
+    optimizer.step()
+    print(f"step {i}, loss: {loss.item()}")
+
+import sys; sys.exit(0)
 
 torch.manual_seed(42)
 torch.cuda.manual_seed(42)
