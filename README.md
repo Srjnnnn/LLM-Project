@@ -4,7 +4,7 @@ This is a test project that follows [Andrej Karpathy's GPT2 repreduction video](
 It uses a small portion of [fineweb-edu](https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu) dataset `600M tokens (100M validation)` with RTX 4090 Laptop GPU (16GB).<br>
 Main purpose for this project is to make a series of internal company sessions about LLMs and their implementation details.<br>
 <br>
-![screenshot](./screenshot.png)
+![screenshot](screenshot.png)
 
 ## Built With
 
