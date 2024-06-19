@@ -7,7 +7,7 @@ import inspect
 import os
 import numpy as np
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 @dataclass
 class GPTConfig:
     block_size: int = 1024 ## max sequence length
