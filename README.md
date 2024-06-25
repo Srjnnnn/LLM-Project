@@ -2,7 +2,7 @@
 
 The first content `gpt2.py` and `inference.py`together is a test project that follows [Andrej Karpathy's GPT2 repreduction video](https://youtu.be/l8pRSuU81PU?si=2XtORh4Xk4NP2r4H) lesson with some changes.
 It uses a small portion of [fineweb-edu](https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu) dataset `600M tokens (100M validation)` with RTX 4090 Laptop GPU (16GB).<br>
-The `Transformers` folder contains different implementation of GPT. A fine-tuning and a RAG example section will be added there as well.<br>
+The `Transformers` folder contains different implementation of GPT, a fine-tuning and a RAG example.<br>
 This file get some of the codes from `Transformers for Natural Language Processing and Computer Vision from Denis Rothman` and `Natural Language Processing with Transformers from Lewis Tunstall, Leandro von Werra, Thomas Wolf`.<br>
 Main purpose for this project is to make a series of internal company sessions about LLMs and their implementation details.<br>
 <br>

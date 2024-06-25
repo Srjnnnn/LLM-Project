@@ -3,6 +3,7 @@ aiohttp==3.9.5
 aiosignal==1.3.1
 annotated-types==0.7.0
 anyio==4.4.0
+appdirs==1.4.4
 argon2-cffi==23.1.0
 argon2-cffi-bindings==21.2.0
 arrow==1.3.0
@@ -12,15 +13,19 @@ async-lru==2.0.4
 async-timeout==4.0.3
 attrs==23.2.0
 Babel==2.15.0
+backoff==2.2.1
 beautifulsoup4==4.12.3
 bertviz==1.4.0
 bleach==6.1.0
+boilerpy3==1.0.7
 boto3==1.34.129
 botocore==1.34.129
+cattrs==23.2.3
 certifi==2024.6.2
 cffi==1.16.0
 charset-normalizer==3.3.2
 comm @ file:///home/conda/feedstock_root/build_artifacts/comm_1710320294760/work
+construct==2.5.3
 contourpy==1.2.1
 cycler==0.12.1
 dacite==1.8.1
@@ -29,8 +34,15 @@ debugpy @ file:///croot/debugpy_1690905042057/work
 decorator @ file:///home/conda/feedstock_root/build_artifacts/decorator_1641555617451/work
 defusedxml==0.7.1
 dill==0.3.8
+distro==1.9.0
+docopt==0.6.2
+elastic-transport==8.13.1
+elasticsearch==8.14.0
+elasticsearch-haystack==0.6.0
+Events==0.5
 exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1704921103267/work
 executing @ file:///home/conda/feedstock_root/build_artifacts/executing_1698579936712/work
+farm-haystack==1.26.2
 fastjsonschema==2.20.0
 filelock==3.13.1
 flatbuffers==24.3.25
@@ -43,6 +55,8 @@ google-pasta==0.2.0
 grpcio==1.64.1
 h11==0.14.0
 h5py==3.11.0
+# Editable install with no version control (haystack-ai==2.3.0rc0)
+-e /home/sercan/Documents/Software/haystack
 htmlmin==0.1.12
 httpcore==1.0.5
 httpx==0.27.0
@@ -50,6 +64,7 @@ huggingface-hub==0.23.4
 idna==3.7
 ImageHash==4.3.1
 importlib_metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1710971335535/work
+inflect==7.2.1
 ipykernel @ file:///home/conda/feedstock_root/build_artifacts/ipykernel_1717717528849/work
 ipython @ file:///home/conda/feedstock_root/build_artifacts/ipython_1717182742060/work
 ipywidgets==8.1.3
@@ -76,6 +91,7 @@ jupyterlab_server==2.27.2
 jupyterlab_widgets==3.0.11
 keras==3.3.3
 kiwisolver==1.4.5
+lazy-imports==0.3.1
 libclang==18.1.1
 llvmlite==0.43.0
 Markdown==3.6
@@ -86,6 +102,8 @@ matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib
 mdurl==0.1.2
 mistune==3.0.2
 ml-dtypes==0.3.2
+monotonic==1.6
+more-itertools==10.3.0
 mpmath==1.3.0
 multidict==6.0.5
 multimethod==1.11.2
@@ -98,6 +116,7 @@ nest_asyncio @ file:///home/conda/feedstock_root/build_artifacts/nest-asyncio_17
 networkx==3.2.1
 notebook==7.2.1
 notebook_shim==0.2.4
+num2words==0.5.13
 numba==0.60.0
 numpy==1.26.3
 nvidia-cublas-cu12==12.1.3.1
@@ -112,6 +131,7 @@ nvidia-cusparse-cu12==12.1.0.106
 nvidia-nccl-cu12==2.20.5
 nvidia-nvjitlink-cu12==12.1.105
 nvidia-nvtx-cu12==12.1.105
+openai==1.35.1
 opt-einsum==3.3.0
 optree==0.11.0
 overrides==7.7.0
@@ -121,13 +141,16 @@ pandas-profiling==3.6.6
 pandocfilters==1.5.1
 parso @ file:///home/conda/feedstock_root/build_artifacts/parso_1712320355065/work
 patsy==0.5.6
+pefile==2023.2.7
 pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1706113125309/work
 phik==0.12.4
 pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
 pillow==10.2.0
 platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1715777629804/work
+posthog==3.5.0
 prometheus_client==0.20.0
 prompt_toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1717583537988/work
+prompthub-py==4.0.0
 protobuf==4.25.3
 psutil @ file:///opt/conda/conda-bld/psutil_1656431268089/work
 ptyprocess @ file:///home/conda/feedstock_root/build_artifacts/ptyprocess_1609419310487/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
@@ -135,21 +158,25 @@ pure-eval @ file:///home/conda/feedstock_root/build_artifacts/pure_eval_16428759
 pyarrow==16.1.0
 pyarrow-hotfix==0.6
 pycparser==2.22
-pydantic==2.7.4
+pydantic==1.10.16
 pydantic_core==2.18.4
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1714846767233/work
 pyparsing==3.1.2
 python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1709299778482/work
 python-json-logger==2.0.7
+python-ptrace==0.9.9
 pytz==2024.1
 PyWavelets==1.6.0
 PyYAML==6.0.1
 pyzmq @ file:///croot/pyzmq_1705605076900/work
 qtconsole==5.5.2
 QtPy==2.4.1
+quantulum3==0.9.1
+rank-bm25==0.2.2
 referencing==0.35.1
 regex==2024.5.15
 requests==2.32.3
+requests-cache==0.9.8
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rich==13.7.1
@@ -160,13 +187,16 @@ scikit-learn==1.5.0
 scipy==1.13.1
 seaborn==0.13.2
 Send2Trash==1.8.3
+sentence-transformers==3.0.1
 sentencepiece==0.2.0
 six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
 sniffio==1.3.1
 soupsieve==2.5
+sseclient-py==1.8.0
 stack-data @ file:///home/conda/feedstock_root/build_artifacts/stack_data_1669632077133/work
 statsmodels==0.14.2
 sympy==1.12
+tenacity==8.4.1
 tensorboard==2.16.2
 tensorboard-data-server==0.7.2
 tensorflow==2.16.1
@@ -176,7 +206,7 @@ terminado==0.18.1
 threadpoolctl==3.5.0
 tiktoken==0.7.0
 tinycss2==1.3.0
-tokenizers==0.19.1
+tokenizers==0.15.2
 tomli==2.0.1
 torch==2.3.1+cu121
 torchaudio==2.3.1+cu121
@@ -184,13 +214,14 @@ torchvision==0.18.1+cu121
 tornado @ file:///croot/tornado_1696936946304/work
 tqdm==4.66.4
 traitlets @ file:///home/conda/feedstock_root/build_artifacts/traitlets_1713535121073/work
-transformers==4.41.2
+transformers==4.39.3
 triton==2.3.1
 typeguard==4.3.0
 types-python-dateutil==2.9.0.20240316
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1717802530399/work
 tzdata==2024.1
 uri-template==1.3.0
+url-normalize==1.4.3
 urllib3==2.2.1
 visions==0.7.6
 wcwidth @ file:///home/conda/feedstock_root/build_artifacts/wcwidth_1704731205417/work
